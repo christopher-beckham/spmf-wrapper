@@ -1,0 +1,18 @@
+@relation contextUncertain
+
+@attribute a1 numeric
+@attribute a2 numeric
+@attribute a3 numeric
+@attribute a4 numeric
+@attribute a5 numeric
+
+%1(0.5) 2(0.4) 4(0.3) 5(0.7)
+%2(0.5) 3(0.4) 5(0.4)
+%1(0.6) 2(0.5) 4(0.1) 5(0.5)
+%1(0.7) 2(0.4) 3(0.3) 5(0.9)
+
+@data
+0.5,0.4,?,0.3,0.7
+?,0.5,0.4,?,0.4
+0.6,0.5,?,0.1,0.5
+0.7,0.4,0.3,?,0.9

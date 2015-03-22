@@ -1,0 +1,19 @@
+@relation contextPasquier99
+@attribute a1 {t}
+@attribute a2 {t}
+@attribute a3 {t}
+@attribute a4 {t}
+@attribute a5 {t}
+
+%1 3 4
+%2 3 5
+%1 2 3 5
+%2 5 
+%1 2 3 5
+
+@data
+t,?,t,t,?
+?,t,t,?,t
+t,t,t,?,t
+?,t,?,?,t
+t,t,t,?,t
