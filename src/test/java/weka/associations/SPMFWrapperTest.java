@@ -17,14 +17,14 @@
  * Copyright (C) 2006 University of Waikato, Hamilton, New Zealand
  */
 
-package test.java.weka.associations;
+package weka.associations;
 
 import java.util.HashMap;
 import java.util.HashSet;
 
-import main.java.weka.associations.SPMFWrapper;
 import weka.associations.AbstractAssociatorTest;
 import weka.associations.Associator;
+import weka.associations.SPMFWrapper;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 import junit.framework.Test;

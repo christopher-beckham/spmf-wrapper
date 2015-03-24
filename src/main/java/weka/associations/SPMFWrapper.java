@@ -1,4 +1,4 @@
-package main.java.weka.associations;
+package weka.associations;
 
 import java.io.BufferedReader;
 import java.io.File;
