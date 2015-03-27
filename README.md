@@ -39,4 +39,4 @@ Then go to `dist` and use the WEKA package manager to install `spmfWrapper.zip`.
 ### Issues
 
 * Not all association / item-set mining algorithms work. This is because some of the algorithms take in special datasets that can't be represented in ARFF (or so I believe).
-* I wasn't able to "elegantly" pass the currently-loaded ARFF into SPMF so it writes the ARFF to the OS's temp directory and gets SPMF to load it there. That means that on a large dataset things might get quite slow as it has to be saved to disk and then read in again by SPMF.
+* I wasn't able to "elegantly" pass the currently-loaded ARFF into SPMF so it writes the ARFF to the OS's temp directory and gets SPMF to load it there. That means that on a large dataset things might get quite slow as it has to be saved to disk and then read in again by SPMF. Also, if an exception gets thrown (e.g. you specified the wrong params for an algorithm) the temporary .arff file in the temp folder might not get deleted so this is something I need to try and fix as well.
