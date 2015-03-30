@@ -5,10 +5,10 @@
 PackageName=SPMFWrapper
 
 # Version (required)
-Version=0.0.1
+Version=0.0.2
 
 #Date (year-month-day)
-Date=2015-03-22
+Date=2015-03-30
 
 # Title (required)
 Title=SPMFWrapper
@@ -29,7 +29,7 @@ License=GPL 3.0
 Description=A wrapper for SPMF
 
 # Package URL for obtaining the package archive (required)
-PackageURL=http://localhost/
+PackageURL=https://github.com/chrispy645/spmf-wrapper/releases
 
 # URL for further information
 URL=https://github.com/chrispy645/spmf-wrapper

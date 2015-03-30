@@ -6,11 +6,13 @@ import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.UUID;
 import java.util.Vector;
 
 import ca.pfv.spmf.gui.CommandProcessor;
-import ca.pfv.spmf.gui.Main;
+import ca.pfv.spmf.gui.WrapperMain;
 import weka.associations.AbstractAssociator;
 import weka.associations.AssociationRules;
 import weka.associations.AssociationRulesProducer;
@@ -43,8 +45,33 @@ public class SPMFWrapper extends AbstractAssociator implements OptionHandler,
 	
 	protected String m_spmfOutput = "";
 	
+	protected HashSet<String> ignoreAlgorithm = new HashSet<String>();
+	protected HashMap<String, Integer> expectedParams = new HashMap<String, Integer>();
+	
 	public SPMFWrapper() {
 	    resetOptions();
+	    
+		ignoreAlgorithm.add("HMine"); // doesn't work, even for spmf.jar
+		ignoreAlgorithm.add("DCI_Closed"); // doesn't like the spmf file that gets converted from arff
+		ignoreAlgorithm.add("UApriori"); // takes probabilities for items, but doesn't like a numeric arff (which you need)
+		ignoreAlgorithm.add("Two-Phase"); // takes a special type of input that doesn't appear it could be converted to arff
+		ignoreAlgorithm.add("FHM"); // same as above
+		ignoreAlgorithm.add("HUI-Miner"); // same as above
+		ignoreAlgorithm.add("UPGrowth"); // same as above
+		ignoreAlgorithm.add("IHUP"); // same as above
+	
+		expectedParams.put("AprioriInverse", 2 );
+		expectedParams.put("MSApriori", 2);
+		expectedParams.put("FPGrowth_association_rules", 2);
+		expectedParams.put("FPGrowth_association_rules_with_lift", 3);
+		expectedParams.put("IGB", 2);
+		expectedParams.put("Sporadic_association_rules", 3);
+		expectedParams.put("Closed_association_rules", 2);
+		expectedParams.put("MNR", 2);
+		expectedParams.put("Indirect_association_rules", 3);
+		expectedParams.put("FHSAR", 3 );
+		expectedParams.put("TopKRules", 2);
+		expectedParams.put("TNR", 3);
 	}
 	
 	public void resetOptions() {
@@ -93,6 +120,8 @@ public class SPMFWrapper extends AbstractAssociator implements OptionHandler,
 		new Tag(37, "TopKRules"),
 		new Tag(38, "TNR"),
 	};
+	
+	
 	
 	public SelectedTag getAlgorithm() {
 		return new SelectedTag(m_algorithm, TAGS_SELECTION);
@@ -146,7 +175,25 @@ public class SPMFWrapper extends AbstractAssociator implements OptionHandler,
 	}
 
 	@Override
-	public void buildAssociations(Instances data) throws Exception {	
+	public void buildAssociations(Instances data) throws Exception {
+		
+		if( ignoreAlgorithm.contains(TAGS_SELECTION[m_algorithm].getReadable()) ) {
+			throw new WekaException("This algorithm is not currently supported!");
+		}
+		
+		Integer numParams = expectedParams.get(TAGS_SELECTION[m_algorithm].getReadable());
+		int numSpecified = getParams().split(" ").length;
+		if(numParams != null) {
+			if(numParams != numSpecified) {
+				throw new WekaException("Algorithm requires " + numParams + " parameters but only " +
+					numSpecified + " params were specified!");
+			}
+		} else {
+			if(numSpecified != 1) {
+				throw new WekaException("Algorithm requires only 1 parameter but " +
+					numSpecified + " params were specified!");
+			}
+		}
 		
 		getCapabilities().testWithFail(data);
 		
@@ -205,28 +252,48 @@ public class SPMFWrapper extends AbstractAssociator implements OptionHandler,
 			cmdString[4+i] = splitParams[i];
 		}
 		
-		Main.processCommandLineArguments(cmdString);
-		
-		System.out.println();
-		
-		StringBuilder sb = new StringBuilder();
-		sb.append("Algorithm: " + getAlgorithm().getSelectedTag().getReadable() + "\n");
-		sb.append("Parameters: " + getParams() + "\n");
-		sb.append("\n");
-		
-		File outFile = new File(randFilename + ".out");
-		FileReader fr = new FileReader(outFile);
-		BufferedReader br = new BufferedReader(fr);
-		String line;
-		while( (line = br.readLine()) != null ) {
-			sb.append(line);
+		/*
+		 * I've had to steal Main.java from SPMF and write my own version
+		 * called WrapperMain.java so that I can deal with the exceptions
+		 * that can get thrown.
+		 */
+		System.err.println("Tmp dir used: " + System.getProperty("java.io.tmpdir"));
+		try {
+			WrapperMain.processCommandLineArguments(cmdString);
+			
+			System.out.println();
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append("Algorithm: " + getAlgorithm().getSelectedTag().getReadable() + "\n");
+			sb.append("Parameters: " + getParams() + "\n");
 			sb.append("\n");
+			
+			File outFile = new File(randFilename + ".out");
+			FileReader fr = new FileReader(outFile);
+			BufferedReader br = new BufferedReader(fr);
+			String line;
+			while( (line = br.readLine()) != null ) {
+				sb.append(line);
+				sb.append("\n");
+			}
+			fr.close();
+			m_spmfOutput = sb.toString();
+			
+		} catch (NumberFormatException e) {
+            System.err.println("Error. Please check the parameters of the algorithm.  The format for numbers is incorrect.");
+            System.err.println("Go to http://www.philippe-fournier-viger.com/spmf/index.php?link=documentation.php and"
+            		+ " look up the section for " + getAlgorithm().getSelectedTag().getReadable() + " to see the proper format for"
+            		+ " specifying the parameters."  );
+            e.printStackTrace();
+		} catch(Throwable e) {
+        	System.err.println("An error while trying to run the algorithm. \n ERROR MESSAGE = " + e.toString());
+            e.printStackTrace();
+		} finally {
+			//System.out.println(randFilename);
+			new File(randFilename).deleteOnExit();
+			new File(randFilename + ".out").deleteOnExit();	
+			new File(randFilename + ".tmp").deleteOnExit();
 		}
-		fr.close();
-		m_spmfOutput = sb.toString();
-		
-		new File(randFilename).deleteOnExit();
-		new File(randFilename + ".out").deleteOnExit();
 		
 	}
 	
